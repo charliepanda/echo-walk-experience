@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { SoundPlayerProps } from '@/types';
 import TextDisplay from './TextDisplay';
+import FootstepsAnimation from './FootstepsAnimation';
 
 const SoundPlayer: React.FC<SoundPlayerProps> = ({ 
   sounds, 
@@ -11,6 +12,7 @@ const SoundPlayer: React.FC<SoundPlayerProps> = ({
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showStartButton, setShowStartButton] = useState(true);
   
   const soundRef = useRef<HTMLAudioElement | null>(null);
   const transitionSoundRef = useRef<HTMLAudioElement | null>(null);
@@ -84,12 +86,11 @@ const SoundPlayer: React.FC<SoundPlayerProps> = ({
         console.error("Error playing transition sound:", error);
       }
       
-      // After transition sound completes or after a delay, move to next sound
-      const transitionDuration = transitionSoundRef.current?.duration || 1;
+      // Increased transition duration to 4 seconds (4000ms)
       setTimeout(() => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % sounds.length);
         setIsTransitioning(false);
-      }, transitionDuration * 1000);
+      }, 4000);
     }
   }, [isTransitioning, sounds.length]);
 
@@ -106,6 +107,7 @@ const SoundPlayer: React.FC<SoundPlayerProps> = ({
       try {
         await soundRef.current.play();
         setIsPlaying(true);
+        setShowStartButton(false);
       } catch (error) {
         console.error("Error during initial play:", error);
       }
@@ -119,14 +121,16 @@ const SoundPlayer: React.FC<SoundPlayerProps> = ({
   return (
     <div 
       className="min-h-screen flex flex-col items-center justify-center bg-black text-white relative"
-      onClick={handleInitialPlay}
+      onClick={showStartButton ? handleInitialPlay : undefined}
     >
       <TextDisplay 
         text={sounds[currentIndex].description} 
         isTransitioning={isTransitioning}
       />
       
-      {!isPlaying && (
+      {isTransitioning && <FootstepsAnimation />}
+      
+      {!isPlaying && showStartButton && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-90 z-10">
           <button 
             onClick={handleInitialPlay}
