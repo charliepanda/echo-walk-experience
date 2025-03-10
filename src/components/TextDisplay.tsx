@@ -36,7 +36,7 @@ const TextDisplay: React.FC<TextDisplayProps> = ({ text, isTransitioning }) => {
       </p>
       <div className="mt-12 opacity-50">
         <p className="text-sm font-mono uppercase tracking-widest animate-pulse-subtle">
-          {!isTransitioning ? 'Press ↑ to continue' : 'Transitioning...'}
+          {!isTransitioning ? 'Press ↑ to continue' : ''}
         </p>
       </div>
     </div>

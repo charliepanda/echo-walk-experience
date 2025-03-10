@@ -53,11 +53,10 @@ const SoundPlayer: React.FC<SoundPlayerProps> = ({
     };
   }, []);
 
-  // Only load the sound when index changes, but don't auto-play during transition
+  // Only load the sound when index changes, don't play during transition
   useEffect(() => {
     if (!soundRef.current || sounds.length === 0) return;
     
-    // Only load the new sound
     soundRef.current.src = sounds[currentIndex].file;
     soundRef.current.load();
     
