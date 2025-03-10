@@ -53,31 +53,35 @@ const SoundPlayer: React.FC<SoundPlayerProps> = ({
     };
   }, []);
 
-  // Play the current sound when index changes
+  // Only load the sound when index changes, but don't auto-play during transition
   useEffect(() => {
     if (!soundRef.current || sounds.length === 0) return;
     
+    // Only load the new sound
     soundRef.current.src = sounds[currentIndex].file;
     soundRef.current.load();
     
-    const playSound = async () => {
-      try {
-        await soundRef.current?.play();
-        setIsPlaying(true);
-      } catch (error) {
-        console.error("Error playing sound:", error);
-        setIsPlaying(false);
-      }
-    };
-    
-    playSound();
+    // Only play if we're not in a transition
+    if (!isTransitioning) {
+      const playSound = async () => {
+        try {
+          await soundRef.current?.play();
+          setIsPlaying(true);
+        } catch (error) {
+          console.error("Error playing sound:", error);
+          setIsPlaying(false);
+        }
+      };
+      
+      playSound();
+    }
     
     return () => {
       if (soundRef.current) {
         soundRef.current.pause();
       }
     };
-  }, [currentIndex, sounds]);
+  }, [currentIndex, sounds, isTransitioning]);
 
   // Handle keyboard events for navigation
   const handleKeyDown = useCallback(async (event: KeyboardEvent) => {
@@ -87,6 +91,7 @@ const SoundPlayer: React.FC<SoundPlayerProps> = ({
       // Pause current sound
       if (soundRef.current) {
         soundRef.current.pause();
+        setIsPlaying(false);
       }
       
       // Play transition sound
@@ -99,10 +104,15 @@ const SoundPlayer: React.FC<SoundPlayerProps> = ({
         console.error("Error playing transition sound:", error);
       }
       
-      // Increased transition duration to 4 seconds (4000ms)
+      // Wait for the full transition (4 seconds) before changing to next sound
       setTimeout(() => {
+        // Change to next sound
         setCurrentIndex((prevIndex) => (prevIndex + 1) % sounds.length);
-        setIsTransitioning(false);
+        
+        // After the index has changed and new sound is loaded, mark transition as complete
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 100); // Small delay to ensure the sound has loaded
       }, 4000);
     }
   }, [isTransitioning, sounds.length]);
