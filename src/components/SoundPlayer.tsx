@@ -12,7 +12,6 @@ const SoundPlayer: React.FC<SoundPlayerProps> = ({
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [showStartButton, setShowStartButton] = useState(true);
   
   const soundRef = useRef<HTMLAudioElement | null>(null);
   const transitionSoundRef = useRef<HTMLAudioElement | null>(null);
@@ -28,6 +27,20 @@ const SoundPlayer: React.FC<SoundPlayerProps> = ({
       soundRef.current.load();
     }
     
+    // Auto-play sound when component mounts
+    const playInitialSound = async () => {
+      if (soundRef.current) {
+        try {
+          await soundRef.current.play();
+          setIsPlaying(true);
+        } catch (error) {
+          console.error("Error playing initial sound:", error);
+        }
+      }
+    };
+    
+    playInitialSound();
+    
     return () => {
       if (soundRef.current) {
         soundRef.current.pause();
@@ -40,7 +53,7 @@ const SoundPlayer: React.FC<SoundPlayerProps> = ({
     };
   }, []);
 
-  // Play the current sound
+  // Play the current sound when index changes
   useEffect(() => {
     if (!soundRef.current || sounds.length === 0) return;
     
@@ -101,45 +114,18 @@ const SoundPlayer: React.FC<SoundPlayerProps> = ({
     };
   }, [handleKeyDown]);
 
-  // Handle initial autoplay (requires user interaction in most browsers)
-  const handleInitialPlay = async () => {
-    if (soundRef.current && !isPlaying) {
-      try {
-        await soundRef.current.play();
-        setIsPlaying(true);
-        setShowStartButton(false);
-      } catch (error) {
-        console.error("Error during initial play:", error);
-      }
-    }
-  };
-
   if (sounds.length === 0) {
     return <div className="text-center p-8">No sounds available</div>;
   }
 
   return (
-    <div 
-      className="min-h-screen flex flex-col items-center justify-center bg-black text-white relative"
-      onClick={showStartButton ? handleInitialPlay : undefined}
-    >
+    <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white relative">
       <TextDisplay 
         text={sounds[currentIndex].description} 
         isTransitioning={isTransitioning}
       />
       
       {isTransitioning && <FootstepsAnimation />}
-      
-      {!isPlaying && showStartButton && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-90 z-10">
-          <button 
-            onClick={handleInitialPlay}
-            className="px-8 py-4 rounded-full bg-white text-black font-medium hover:bg-opacity-90 transition-all duration-300 transform hover:scale-105"
-          >
-            Start Experience
-          </button>
-        </div>
-      )}
     </div>
   );
 };
